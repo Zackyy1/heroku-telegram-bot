@@ -18,7 +18,7 @@ import json
 from flask import jsonify
 from flask import Flask
 
-token = os.environ['TELEGRAM_TOKEN']
+TOKEN = os.environ['TELEGRAM_TOKEN']
 server = Flask(__name__)
 firebase = firebase.FirebaseApplication('https://databaserests.firebaseio.com', None)
 
@@ -80,7 +80,7 @@ def listener(messages):
             print(str(m.chat.first_name) + " [" + str(m.chat.id) + "]: " + m.text)
 
 
-bot = telebot.TeleBot(token)
+bot = telebot.TeleBot(TOKEN)
 bot.set_update_listener(listener)
 start_message_1 = "I'm your Seljanka bot. And I'll help you with anything, bruh!"
 start_message_2 = "What would you like to do today?"
