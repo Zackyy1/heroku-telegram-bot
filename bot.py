@@ -1,6 +1,8 @@
 
 # -*- coding: utf-8 -*-
 
+print("Version 0.1")
+
 import redis
 import os
 import telebot
