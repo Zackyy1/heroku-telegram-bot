@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-print("Version 0.1")
+print("Version 0.2")
 
 import redis
 import os
@@ -18,7 +18,7 @@ import json
 from flask import jsonify
 from flask import Flask
 
-token = '500423888:AAFyekJ24bxroCXb65lBTaSm9r6TFKDXKHo'
+token = os.environ['TELEGRAM_TOKEN']
 
 firebase = firebase.FirebaseApplication('https://databaserests.firebaseio.com', None)
 
@@ -387,4 +387,18 @@ def handleSoup(message):
 ########################################################################################################################
 
 
-bot.polling()
+@server.route('/' + TOKEN, methods=['POST'])
+def getMessage():
+    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+    return "!", 200
+
+
+@server.route("/")
+def webhook():
+    bot.remove_webhook()
+    bot.set_webhook(url='https://seljankatest.herokuapp.com/' + TOKEN)
+    return "!", 200
+
+
+if __name__ == "__main__":
+    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
