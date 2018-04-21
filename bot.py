@@ -270,12 +270,11 @@ def handleSoup(message):
 ########################################################################################################################
 
 
-TOKEN = token
 PORT = int(os.environ.get('PORT', '8443'))
-updater = Updater(TOKEN)
+updater = Updater(token)
 # add handlers
 updater.start_webhook(listen="0.0.0.0",
                       port=PORT,
-                      url_path=TOKEN)
-updater.bot.set_webhook("https://seljankatest.herokuapp.com/" + TOKEN)
+                      url_path=token)
+updater.bot.set_webhook("https://seljankatest.herokuapp.com/" + token)
 updater.idle()
