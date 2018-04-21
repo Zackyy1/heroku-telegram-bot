@@ -1,6 +1,4 @@
-
-
-restaurants = {
+all = {
 
 
     "wesset" : {
@@ -77,19 +75,3 @@ restaurants = {
             'link' : 'https://www.imstupid.com/',
     },
 }
-clubs = {}
-
-inline = {
-        "Villa Wesset" : {'villa wesset', 'wesset'}
-
-}
-
-
-
-#{
- #   'Wesset' : {
-  #      'opened1' : 'P-N 241:412',
-   #     'opened2' : 'R-L 123:213'
-    #},
-#
-#}

@@ -25,6 +25,10 @@ languages = {
     "language":"Language",
     "city":"City",
     "call":"Call",
+    "citychoice":"Let's choose which city you're in:",
+    "parnu":"Pärnu",
+    "tallinn":"Tallinn",
+    "menu":"Menu",
     },
 "estonian":
     {
@@ -35,7 +39,7 @@ languages = {
     "initstage0" : "Vali, kuhu taha minna täna:",
     "showmore" : "Näita veel 2",
     "toprestsaround" : "Näita parimad restoranid",
-    "offers" : "Special offers",
+    "offers" : "Pakkumised",
     "maintenance": "See praegu ei tööta :]",
     "returning": "Tagasi menüüsse...",
     "initstage4":"Süüa tahad, jah?",
@@ -50,6 +54,10 @@ languages = {
     "language":"Keel",
     "city":"Linn",
     "call":"Helista",
+    "citychoice":"Vali, mis linnas praegu oled:",
+    "parnu":"Pärnu",
+    "tallinn":"Tallinn",
+    "menu":"Menüü",
        },
 
 }
