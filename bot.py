@@ -337,7 +337,6 @@ def handleSoup(message):
         bot.send_message(message.chat.id, text=getLang(cidi)["maintenance"])
         setStage(0, mes)
     elif message.text == getLang(cidi)["showmore"]:
-        print("Sorting 3 more, starting at " + str(step))
         setStage(33, mes)
 
     elif message.text == "English" and stage == 13:
