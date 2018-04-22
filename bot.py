@@ -27,7 +27,11 @@ firebase = firebase.FirebaseApplication('https://databaserests.firebaseio.com', 
 
 my_url = 'https://databaserests.firebaseio.com'
 
-localDB.database = firebase.get('/db', None)
+def upddb()
+    attempt = localDB.database = firebase.get('/db', None)
+    return attempt
+
+print(upddb())
 
 ######################################## VARIABLES ################################################################################################
 global stage
