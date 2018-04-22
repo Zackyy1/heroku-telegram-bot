@@ -261,7 +261,7 @@ def command_start(message):
     else:
         localDB.database = upddb()
         #chosenlang = localDB.database[str(message.from_user.id)]['language'] # Getting language from Local DB
-        chosenlang = firebase.get("/db/"+str(message.from_user.id)+"/language", None)
+        chosenlang = localDB.database[str(message.from_user.id)]['language']
         getCity = firebase.get("/db/"+str(message.from_user.id)+"/city", None)
         localDB.database[str(message.from_user.id)] = {'language' : chosenlang, 'step':0, 'city':getCity }
         print(localDB.database[str(message.from_user.id)]['step'])
