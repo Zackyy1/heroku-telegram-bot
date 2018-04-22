@@ -27,13 +27,14 @@ firebase = firebase.FirebaseApplication('https://databaserests.firebaseio.com', 
 
 my_url = 'https://databaserests.firebaseio.com'
 
-#localDB.database = firebase.get('/db', None)
+localDB.database = firebase.get('/db', None)
 
 ######################################## VARIABLES ################################################################################################
 global stage
 stage = 0
 chatid = "404202426"
 pack = 0
+
 
 
 def getLang(chat_id):
@@ -252,7 +253,9 @@ def command_start(message):
         localDB.database[str(message.from_user.id)] = {'language': chosenlang, 'step': 0, 'city':'Tallinn'}
         firebase.patch('/db', localDB.database)
         print("New user, adding to the database. User's DB: "+ str(localDB.database[str(message.from_user.id)]))
+        localDB.database = firebase.get('/db', None)
     else:
+        localDB.database = firebase.get('/db', None)
         #chosenlang = localDB.database[str(message.from_user.id)]['language'] # Getting language from Local DB
         chosenlang = firebase.get("/db/"+str(message.from_user.id)+"/language", None)
         getCity = firebase.get("/db/"+str(message.from_user.id)+"/city", None)
