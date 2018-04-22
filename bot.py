@@ -24,7 +24,7 @@ firebase = firebase.FirebaseApplication('https://databaserests.firebaseio.com', 
 
 my_url = 'https://databaserests.firebaseio.com'
 
-localDB.database = firebase.get('/db', None)
+#localDB.database = firebase.get('/db', None)
 
 ######################################## VARIABLES ################################################################################################
 global stage
