@@ -27,21 +27,12 @@ my_url = 'https://databaserests.firebaseio.com'
 ######################################## VARIABLES ################################################################################################
 global stage
 stage = 0
-global language
 chatid = "404202426"
 pack = 0
-prevstage = 0
-global restaurantDesired
-restaurantDesired = 2
-global restaurantCurrent
-restaurantCurrent = 0
-global step
-step = 0
 
 
 def getLang(chat_id):
-    usr = localDB.database[str(chat_id.chat.id)]
-    print('got ' + str(usr))
+    usr = localDB.database[str(chat_id.from_user.id)]['language']
     return languages.languages[usr]
 
 
@@ -80,7 +71,7 @@ def listener(messages):
             print(str(m.chat.first_name) + " [" + str(m.chat.id) + "]: " + m.text)
 
 
-bot = telebot.TeleBot(TOKEN)
+bot = telebot.TeleBot(token)
 bot.set_update_listener(listener)
 start_message_1 = "I'm your Seljanka bot. And I'll help you with anything, bruh!"
 start_message_2 = "What would you like to do today?"
@@ -113,16 +104,17 @@ langStage.add(english, estonian, russian)
 
 
 def sort(tab1, mes):
-    global step
     kl = tab1
     chid = mes.chat.id
     shouldShowMore = True
     mess = chid
     rests = list(kl.values())
+    db = localDB.database[str(mes.from_user.id)]
+    print(str(db['step'])+" AHAHAHAH")
     global language
     for x in range(1, 3):
-        if step < len(rests):
-            pack = rests[step]
+        if db['step'] < len(rests):
+            pack = rests[db['step']]
             openedLang = pack[getLang(mes)["openedLocal"]]
             addressLang = getLang(mes)["address"]
             inlineLink = types.InlineKeyboardMarkup()
@@ -138,17 +130,16 @@ def sort(tab1, mes):
             bot.send_message(mess, pack["name"] + ", " + openedLang + addressLang + pack["address"] + ". Tel: " + pack[
                 'phone'], reply_markup=inlineLink)
 
-            step += 1
-            print(str(step) + "/" + str(len(rests)))
-            if len(rests) == step:
+            db['step'] += 1
+            print(str(db['step']) + "/" + str(len(rests)))
+            if len(rests) == db['step']:
                 shouldShowMore = False
                 print("rests == step")
                 bot.send_message(mess, text=getLang(mes)["endoflist"])
                 setStage(0, mes)
 
-        elif step >= len(rests) or step == len(rests):
+        elif db['step'] >= len(rests) or db['step'] == len(rests):
             shouldShowMore = False
-            print("we got into elif tho")
             bot.send_message(mess, text=getLang(mes)["endoflist"])
             setStage(0, mes)
 
@@ -157,6 +148,9 @@ def sort(tab1, mes):
                                                                           getLang(mes)["home"]))
     else:
         return False
+
+def save(message):
+    res = firebase.patch("/db", localDB.database)
 
 
 def get_user_step(uid):
@@ -181,8 +175,10 @@ def applyStage(stageNum, ch):
     if stageNum == 0:
         bot.send_message(chid, text=getLang(ch)["initstage0"],
                          reply_markup=newButton(getLang(ch)['restaurants']))
-        step = 0
+        save(ch)
 
+
+        localDB.database[str(ch.from_user.id)]['step'] = 0
     elif stageNum == 4:
         bot.send_message(chid, text="FOOD!!!!", reply_markup=newButton(getLang(ch)["toprestsaround"],
                                                                        getLang(ch)['offers'],
@@ -241,7 +237,7 @@ def command_start(message):
     cid = message.chat.id
     result = firebase.get('/users/' + str(message.from_user.id), None)
 
-    if result == None:
+    if result is None:
         print("New user, adding to the database")
         result = firebase.patch('/users/' + str(message.from_user.id) + "/",  {"name": message.from_user.first_name})
         bot.send_message(message.chat.id, text="Hello, dear friend! It's the first time you are using me, so let me help you.")
@@ -249,10 +245,12 @@ def command_start(message):
         bot.send_message(message.chat.id, text="Type \'/help\' for additional commands & info!")
         setStage(13, message)
         chosenlang = "english"
-        localDB.database[str(message.from_user.id)] = chosenlang
+        localDB.database[str(message.from_user.id)] = {'language': chosenlang, 'step': 0}
     else:
-        chosenlang = "english"
-        localDB.database[str(message.from_user.id)] = chosenlang
+        chosenlang = localDB.database[str(message.from_user.id)]['language']
+        localDB.database[str(message.from_user.id)] = {'language' : chosenlang, 'step':0 }
+        print(localDB.database[str(message.from_user.id)]['step'])
+        print(localDB.database[str(message.from_user.id)])
         bot.send_message(cid, getLang(message)["welcome1"])
         bot.send_message(cid, getLang(message)["welcome2"], reply_markup=hide)
         setStage(0, message)
@@ -275,10 +273,7 @@ def command_help(m):
 
 @bot.message_handler(commands=['settings'])
 def command_settings(m):
-    global language
-    bot.send_message(m.chat.id, getLang(m)['settingsMsg'],
-                     reply_markup=newButton(getLang(m)["language"],
-                                            getLang(m)['city']))
+    bot.send_message(m.chat.id, getLang(m)['settingsMsg'], reply_markup=newButton(getLang(m)["language"], getLang(m)['city']))
 
 
 print(list(parnu.inline.values()))
@@ -326,6 +321,7 @@ def handleSoup(message):
     cidi = message
     if message.text == getLang(cidi)["restaurants"]:
         setStage(4, mes)
+        localDB.database[str(message.from_user.id)]['step'] = 0
         bot.send_message(message.chat.id, text=getLang(cidi)['initstage4'])
     elif message.text == "Home" or message.text == "Tagasi" or message.text == "Назад":
         bot.send_message(message.chat.id, text=getLang(cidi)["returning"])
@@ -344,25 +340,25 @@ def handleSoup(message):
     elif message.text == "English" and stage == 13:
         print("Changed language to English")
         chosenlang = "english"
-        localDB.database[str(message.from_user.id)] = chosenlang
+        localDB.database[str(message.from_user.id)]['language'] = chosenlang
         setStage(14, mes)
 
     elif message.text == "Eesti" and stage == 13:
         print("Changed language to Eesti")
         chosenlang = "estonian"
-        localDB.database[str(message.from_user.id)] = chosenlang
+        localDB.database[str(message.from_user.id)]['language'] = chosenlang
         setStage(14, mes)
 
     elif message.text == "English" and stage != 13:
         print("Changed language to English")
         chosenlang = "english"
-        localDB.database[str(message.from_user.id)] = chosenlang
+        localDB.database[str(message.from_user.id)]['language'] = chosenlang
         setStage(0, mes)
 
     elif message.text == "Eesti" and stage != 13:
         print("Changed language to Eesti")
         chosenlang = "estonian"
-        localDB.database[str(message.from_user.id)] = chosenlang
+        localDB.database[str(message.from_user.id)]['language'] = chosenlang
         setStage(0, mes)
 
     elif message.text == getLang(cidi)['language'] and stage != 13:
@@ -374,11 +370,13 @@ def handleSoup(message):
 
     elif stage == 14:
         if message.text == getLang(cidi)['parnu']:
-            city = parnu
+            city = 'parnu'
+            localDB.database[str(message.from_user.id)]['city'] = city
             print("Set city to parnu")
         elif message.text == getLang(cidi)['tallinn']:
-            city = parnu
-            print("set city to Tallinn (parnu)")
+            city = 'tallinn'
+            localDB.database[str(message.from_user.id)]['city'] = city
+            print("Set city to Tallin () parnu")
         setStage(0, mes)
     else:
         bot.send_message(message.chat.id, text=getLang(cidi)["unknown"])
