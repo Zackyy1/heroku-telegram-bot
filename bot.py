@@ -31,8 +31,6 @@ def upddb():
     attempt = localDB.database = firebase.get('/db', None)
     return attempt
 
-print(upddb())
-
 ######################################## VARIABLES ################################################################################################
 global stage
 stage = 0
@@ -45,6 +43,11 @@ def getLang(chat_id):
     usr = localDB.database[str(chat_id.from_user.id)]['language']
     return languages.languages[usr]
 
+
+upddb()
+print("Updated database.)
+
+print(upddb())
 
 restaurantStageButtons = [""]
 
