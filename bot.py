@@ -248,6 +248,7 @@ def command_start(message):
         setStage(13, message)
         chosenlang = "english"
         localDB.database[str(message.from_user.id)] = {'language': chosenlang, 'step': 0}
+        firebase.patch('/db', localDB.database[str(message.from_user.id)])
     else:
         chosenlang = localDB.database[str(message.from_user.id)]['language']
         localDB.database[str(message.from_user.id)] = {'language' : chosenlang, 'step':0 }
