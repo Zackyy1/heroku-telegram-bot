@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
-print("Version 0.2")
-
+print("Version 0.4")
+print ('Change log:', \
+       '*Database for languages',\
+       '*Local languages, steps',\
+      )
 import redis
 import os
 import telebot
@@ -152,7 +155,7 @@ def sort(tab1, mes):
         return False
 
 def save(message):
-    res = firebase.patch("/db", localDB.database)
+    res = firebase.patch("/db/"+str(message.from_user.id), localDB.database[str(message.from_user.id)])
 
 
 def get_user_step(uid):
@@ -240,22 +243,25 @@ def command_start(message):
     result = firebase.get('/users/' + str(message.from_user.id), None)
 
     if result is None:
-        print("New user, adding to the database")
         result = firebase.patch('/users/' + str(message.from_user.id) + "/",  {"name": message.from_user.first_name})
         bot.send_message(message.chat.id, text="Hello, dear friend! It's the first time you are using me, so let me help you.")
         bot.send_message(message.chat.id, text="I will show you where you can have fun and get your pizza dosage back to normal!")
         bot.send_message(message.chat.id, text="Type \'/help\' for additional commands & info!")
         setStage(13, message)
         chosenlang = "english"
-        localDB.database[str(message.from_user.id)] = {'language': chosenlang, 'step': 0}
+        localDB.database[str(message.from_user.id)] = {'language': chosenlang, 'step': 0, 'city':'Tallinn'}
         firebase.patch('/db', localDB.database)
+        print("New user, adding to the database. User's DB: "+ str(localDB.database[str(message.from_user.id)]))
     else:
-        chosenlang = localDB.database[str(message.from_user.id)]['language']
-        localDB.database[str(message.from_user.id)] = {'language' : chosenlang, 'step':0 }
+        #chosenlang = localDB.database[str(message.from_user.id)]['language'] # Getting language from Local DB
+        chosenlang = firebase.get("/db/"+str(message.from_user.id)+"/language", None)
+        getCity = firebase.get("/db/"+str(message.from_user.id)+"/city", None)
+        localDB.database[str(message.from_user.id)] = {'language' : chosenlang, 'step':0, 'city':getCity }
         print(localDB.database[str(message.from_user.id)]['step'])
         print(localDB.database[str(message.from_user.id)])
         bot.send_message(cid, getLang(message)["welcome1"])
         bot.send_message(cid, getLang(message)["welcome2"], reply_markup=hide)
+        print("Existing user. User's DB: " + str(localDB.database[str(message.from_user.id)]))
         setStage(0, message)
 
 @bot.message_handler(commands=['home'])
@@ -385,6 +391,7 @@ def handleSoup(message):
 
 
 ########################################################################################################################
+
 
 
 @server.route('/' + token, methods=['POST'])
