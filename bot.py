@@ -45,7 +45,7 @@ def getLang(chat_id):
 
 
 upddb()
-print("Updated database.)
+print("Updated database.")
 
 print(upddb())
 
