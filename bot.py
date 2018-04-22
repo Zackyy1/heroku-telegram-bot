@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 
 print("Version 0.4")
-print ('Change log:', \
-       '*Database for languages',\
-       '*Local languages, steps',\
-      )
+
 import redis
 import os
 import telebot
@@ -263,12 +260,14 @@ def command_start(message):
         localDB.database = upddb()
     else:
         localDB.database = upddb()
+        print(localDB.database, upddb())
         #chosenlang = localDB.database[str(message.from_user.id)]['language'] # Getting language from Local DB
         chosenlang = localDB.database[str(message.from_user.id)]['language']
         getCity = firebase.get("/db/"+str(message.from_user.id)+"/city", None)
         localDB.database[str(message.from_user.id)] = {'language' : chosenlang, 'step':0, 'city':getCity }
         print(localDB.database[str(message.from_user.id)]['step'])
         print(localDB.database[str(message.from_user.id)])
+        localDB.database[str(message.from_user.id)] = firebase.get('/db/'+str(message.from_user.id), None)
         bot.send_message(cid, getLang(message)["welcome1"])
         bot.send_message(cid, getLang(message)["welcome2"], reply_markup=hide)
         print("Existing user. User's DB: " + str(localDB.database[str(message.from_user.id)]))
