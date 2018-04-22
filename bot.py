@@ -13,7 +13,7 @@ from firebase import firebase
 import requests
 import re
 from flask import request
-localDB = {database:{}}
+localDB.database = {}
 import json
 from flask import jsonify
 from flask import Flask
