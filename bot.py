@@ -19,8 +19,9 @@ from flask import jsonify
 from flask import Flask
 
 token = os.environ['TELEGRAM_TOKEN']
+url = os.environ['FIREBASE_URL']
 server = Flask(__name__)
-firebase = firebase.FirebaseApplication('https://databaserests.firebaseio.com', None)
+firebase = firebase.FirebaseApplication(url, None)
 
 my_url = 'https://databaserests.firebaseio.com'
 
