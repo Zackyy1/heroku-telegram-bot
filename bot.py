@@ -9,6 +9,7 @@ from telebot import types
 import parnu
 import languages
 import inlineQuery
+import tallinn
 from firebase import firebase
 import requests
 import re
@@ -20,42 +21,21 @@ from flask import Flask
 
 token = os.environ['TELEGRAM_TOKEN']
 url = os.environ['FIREBASE_URL']
+
+
 server = Flask(__name__)
-firebase = firebase.FirebaseApplication(url, None)
-
-my_url = 'https://databaserests.firebaseio.com'
-
-def upddb():
-    attempt = localDB.database = firebase.get('/db', None)
-    return attempt
-
-######################################## VARIABLES ################################################################################################
 global stage
 stage = 0
-chatid = "404202426"
 pack = 0
+restaurants = {}
+firebase = firebase.FirebaseApplication(url, None)
+bot = telebot.TeleBot(token)
 
 
 
-def getLang(chat_id):
-    usr = localDB.database[str(chat_id.from_user.id)]['language']
-    return languages.languages[usr]
-
-
-upddb()
-print("Updated database.")
-
-print(upddb())
 
 restaurantStageButtons = [""]
 
-city = parnu
-
-restaurantsDict = city.restaurants
-restaurants = {}
-for i in range(0, len(restaurantsDict)):
-    keys = sorted(restaurantsDict.keys(), key=lambda x: (restaurantsDict[x]["priority"]))[i]
-    restaurants[keys] = restaurantsDict[keys]
 
 knownUsers = []  # todo: save these in a file,
 userStep = {}  # so they won't reset every time the bot restarts
@@ -66,44 +46,9 @@ commands = {  # command description used in the "help" command
     'home': "Main menu / return Home"
 }
 
-
 ########################################################################################################################################
-
-
-#################################   UTIL    #######################################################################################################
-
-def listener(messages):
-    """
-    When new messages arrive TeleBot will call this function.
-    """
-    for m in messages:
-        if m.content_type == 'text':
-            # print the sent message to the console
-            print(str(m.chat.first_name) + " [" + str(m.chat.id) + "]: " + m.text)
-
-
-bot = telebot.TeleBot(token)
-bot.set_update_listener(listener)
-start_message_1 = "I'm your Seljanka bot. And I'll help you with anything, bruh!"
-start_message_2 = "What would you like to do today?"
-help_message = """
-This is a help page. We don't need any help, thank you.
-Go back to your soup."""
-
-########################################################################################################################################
-
 
 hide = types.ReplyKeyboardRemove()
-
-
-def newButton(*args):
-    mrkup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-    for arg in args:
-        mrkbut = types.KeyboardButton(arg)
-        mrkup.add(mrkbut)
-    return mrkup
-
-
 langStage = types.ReplyKeyboardMarkup(row_width=0.5, one_time_keyboard=True)
 english = types.KeyboardButton("English")
 estonian = types.KeyboardButton("Eesti")
@@ -113,56 +58,92 @@ langStage.add(english, estonian, russian)
 
 ########################################################### FUNCTIONS ####################################################################################################
 
+def getCity(message):
+    usr = localDB.database[str(message.from_user.id)]['city']
+    if usr == 'parnu':
+        return parnu
+    if usr == 'tallinn':
+        return tallinn
+
+
+def sortRests(dict, mes):
+    restaurantsDict = dict.restaurants
+    global restaurants
+    for i in range(0, len(restaurantsDict)):
+        keys = sorted(restaurantsDict.keys(), key=lambda x: (restaurantsDict[x]["priority"]))[i]
+        restaurants[keys] = restaurantsDict[keys]
+
+
+def getLang(message):
+    usr = localDB.database[str(message.from_user.id)]['language']
+    return languages.languages[usr]
+
+
+def listener(messages):
+    for m in messages:
+        if m.content_type == 'text':
+            # print the sent message to the console
+            print(str(m.chat.first_name) + " [" + str(m.chat.id) + "]: " + m.text)
+
+
+def newButton(*args):
+    mrkup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, row_width=1)
+    for arg in args:
+        mrkbut = types.KeyboardButton(arg)
+        mrkup.add(mrkbut)
+    return mrkup
+
+def upddb():
+    attempt = firebase.get('/db', None)
+    return attempt
 
 def sort(tab1, mes):
     kl = tab1
+    sortRests(getCity(mes), mes)
     chid = mes.chat.id
     shouldShowMore = True
     mess = chid
     rests = list(kl.values())
     db = localDB.database[str(mes.from_user.id)]
-    print(str(db['step'])+" AHAHAHAH")
+    step = db['step']
+    print("Users:"+str(mes.from_user.id)+". Step for sort: "+str(step))
     global language
     for x in range(1, 3):
-        if db['step'] < len(rests):
-            pack = rests[db['step']]
+        if step < len(rests):
+            pack = rests[step]
             openedLang = pack[getLang(mes)["openedLocal"]]
             addressLang = getLang(mes)["address"]
             inlineLink = types.InlineKeyboardMarkup()
             inlbut = types.InlineKeyboardButton(text=pack["name"], url=pack["link"])
-            inlbut2 = types.InlineKeyboardButton(text=getLang(mes)["showmap"],
-                                                 url="https://www.google.ee/maps/place/" + pack["latitude"] + "," +
-                                                     pack["longitude"])
+            inlbut2 = types.InlineKeyboardButton(text=getLang(mes)["showmap"], url="https://www.google.ee/maps/place/" + pack["latitude"] + "," + pack["longitude"])
             inlineLink.add(inlbut)
             inlineLink.add(inlbut2)
             bot.send_photo(mess, pack["image"])
             # bot.send_message(mes, "+37253088726")
             # f bot.send_contact(mes, phone_number='+37253088726', first_name=pack['name'])
-            bot.send_message(mess, pack["name"] + ", " + openedLang + addressLang + pack["address"] + ". Tel: " + pack[
-                'phone'], reply_markup=inlineLink)
+            bot.send_message(mess, pack["name"] + ", " + openedLang + addressLang + pack["address"] + ". Tel: " + pack['phone'], reply_markup=inlineLink)
 
-            db['step'] += 1
+            step += 1
             print(str(db['step']) + "/" + str(len(rests)))
-            if len(rests) == db['step']:
+            if len(rests) == step:
                 shouldShowMore = False
-                print("rests == step")
                 bot.send_message(mess, text=getLang(mes)["endoflist"])
                 setStage(0, mes)
-
-        elif db['step'] >= len(rests) or db['step'] == len(rests):
+                db['step'] = step
+        elif step >= len(rests) or step == len(rests):
             shouldShowMore = False
             bot.send_message(mess, text=getLang(mes)["endoflist"])
             setStage(0, mes)
-
+            db['step'] = step
     if shouldShowMore == True:
         bot.send_message(mess, text="Show 2 more?", reply_markup=newButton(getLang(mes)["showmore"],
                                                                           getLang(mes)["home"]))
+        db['step'] = step
     else:
         return False
 
 def save(message):
     res = firebase.patch("/db/"+str(message.from_user.id), localDB.database[str(message.from_user.id)])
-
 
 def get_user_step(uid):
     if uid in userStep:
@@ -172,11 +153,9 @@ def get_user_step(uid):
         userStep[uid] = 0
         return 0
 
-
 def setPrevStage(st):
     prevstage = st
     return prevstage
-
 
 def applyStage(stageNum, ch):
     global step
@@ -184,12 +163,10 @@ def applyStage(stageNum, ch):
     global stage
     chid = ch.chat.id
     if stageNum == 0:
-        bot.send_message(chid, text=getLang(ch)["initstage0"],
-                         reply_markup=newButton(getLang(ch)['restaurants']))
+        bot.send_message(chid, text=getLang(ch)["initstage0"], reply_markup=newButton(getLang(ch)['restaurants']))
         save(ch)
-
-
         localDB.database[str(ch.from_user.id)]['step'] = 0
+
     elif stageNum == 4:
         bot.send_message(chid, text="FOOD!!!!", reply_markup=newButton(getLang(ch)["toprestsaround"],
                                                                        getLang(ch)['offers'],
@@ -213,9 +190,6 @@ def applyStage(stageNum, ch):
 
     else:
         return
-        # setStage(0, chatid)
-        # bot.send_message(chid, text="Something wrong happened... Returning to Menu!", reply_markup=markup0)
-
 
 def sendPhoto(name):
     pack = city.restaurants[name]
@@ -239,7 +213,12 @@ def setStage(num, chatid1):
     applyStage(stage, chatid1)
 
 
-###########################################################################################################################################################################################
+######################################################    SETUP    #################################################
+
+localDB.database = upddb()
+print("Updated database.")
+print(upddb())
+bot.set_update_listener(listener)
 
 
 #########################################   HANDLERS   ####################################################################################################################################
