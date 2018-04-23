@@ -21,9 +21,9 @@ from flask import Flask
 
 token = os.environ['TELEGRAM_TOKEN']
 url = os.environ['FIREBASE_URL']
-
-
 server = Flask(__name__)
+
+
 global stage
 stage = 0
 pack = 0
@@ -98,6 +98,13 @@ def upddb():
     print("Should localDB.database look like this:? "+str(attempt))
     return attempt
 
+def newInline(*args):
+    imrkup = types.InlineKeyboardMarkup(row_width=2)
+    for arg1, arg2 in args:
+        nbut = types.InlineKeyboardButton(text=arg1, url=arg2)
+        imrkup.add(nbut)
+    return imrkup
+
 def sort(tab1, mes):
     kl = tab1
     sortRests(getCity(mes), mes)
@@ -105,6 +112,8 @@ def sort(tab1, mes):
     shouldShowMore = True
     mess = chid
     rests = list(kl.values())
+    restskey = list(kl.keys())
+    print(restskey[0])
     db = localDB.database[str(mes.from_user.id)]
     step = db['step']
     print("Users:"+str(mes.from_user.id)+". Step for sort: "+str(step))
@@ -117,8 +126,10 @@ def sort(tab1, mes):
             inlineLink = types.InlineKeyboardMarkup()
             inlbut = types.InlineKeyboardButton(text=pack["name"], url=pack["link"])
             inlbut2 = types.InlineKeyboardButton(text=getLang(mes)["showmap"], url="https://www.google.ee/maps/place/" + pack["latitude"] + "," + pack["longitude"])
-            inlineLink.add(inlbut)
-            inlineLink.add(inlbut2)
+            menubut = types.InlineKeyboardButton(text=getLang(mes)['menu'], callback_data=str(restskey[step]))
+            #inlineLink.add(inlbut)
+            #inlineLink.add(inlbut2)
+            inlineLink.add(menubut)
             bot.send_photo(mess, pack["image"])
             # bot.send_message(mes, "+37253088726")
             # f bot.send_contact(mes, phone_number='+37253088726', first_name=pack['name'])
@@ -193,7 +204,7 @@ def applyStage(stageNum, ch):
         return
 
 def sendPhoto(name):
-    pack = city.restaurants[name]
+    pack = inlineQuery.all[name]
     print(pack)
     ans1 = types.InlineQueryResultPhoto('1', pack["image"], pack["image"],
                                         input_message_content=types.InputTextMessageContent(
@@ -210,6 +221,7 @@ def setStage(num, chatid1):
     stage = num
     chatid = chatid1
     applyStage(stage, chatid1)
+
 
 
 ######################################################    SETUP    #################################################
@@ -234,6 +246,7 @@ def command_start(message):
         bot.send_message(message.chat.id, text="Type \'/help\' for additional commands & info!")
         setStage(13, message)
         chosenlang = "english"
+
         localDB.database[str(message.from_user.id)] = {'language': chosenlang, 'step': 0, 'city':'Tallinn'}
         firebase.patch('/db', localDB.database)
         print("New user, adding to the database. User's DB: "+ str(localDB.database[str(message.from_user.id)]))
@@ -270,6 +283,32 @@ def command_help(m):
 def command_settings(m):
     bot.send_message(m.chat.id, getLang(m)['settingsMsg'], reply_markup=newButton(getLang(m)["language"], getLang(m)['city']))
 
+@bot.callback_query_handler(func=lambda call: True)
+def doit(m):
+    print(m)
+    findinTable = inlineQuery.all[m.data]
+    if m.inline_message_id is None:
+        bot.edit_message_reply_markup(chat_id=m.message.chat.id, message_id=m.message.message_id, reply_markup=newInline(
+                                        ("Website", findinTable['link']),
+                                        (getLang(m)['showmenu'], "test2.com"),
+                                        (getLang(m)['showmap'],
+                                         "https://www.google.ee/maps/place/" + findinTable["latitude"] + "," + findinTable["longitude"])))
+    else:
+        bot.edit_message_reply_markup(inline_message_id=m.inline_message_id,
+                                      reply_markup=newInline(
+                                          ("Website", findinTable['link']),
+                                          ("Show menu", "test2.com"),
+                                          ("Show on map",
+                                           "https://www.google.ee/maps/place/" + findinTable["latitude"] + "," +
+                                           findinTable["longitude"])))
+
+
+@bot.message_handler(commands = ['a'])
+def test(mes):
+    bot.send_message(mes.chat.id, text="Test", reply_markup=newInline(("Test button 1",
+                                                                       'https://www.tutorialspoint.com/python/python_tuples.htm'),
+                                                                      ('test button 2',
+                                                                      'https://www.tutorialspoint.com/python/python_tuples.htm')))
 
 print(list(parnu.inline.values()))
 arr = list(parnu.inline.values())
@@ -289,10 +328,8 @@ def smth(inline_query):
         if query[0:len(query)].lower() == str(list1[i])[0:len(query)].lower():
             print((query[0:len(query)].lower(), str(list1[i])[0:len(query)].lower()))
 
-            key.add(types.InlineKeyboardButton(text=list2[i]['name'], url=list2[i]['link']))
-            key.add(types.InlineKeyboardButton(text="Show on map",
-                                               url="https://www.google.ee/maps/place/" + list2[i]["latitude"] + "," +
-                                                   list2[i]["longitude"]))
+            key.add(types.InlineKeyboardButton(text="Menu", callback_data=str(list1[i])))
+
             result1 = types.InlineQueryResultPhoto('0', list2[i]['image'], list2[i]['image'],
                                                    caption=list2[i]["name"] + ", Address: " + list2[i][
                                                        "address"] + ". Tel: " + list2[i]['phone'],
