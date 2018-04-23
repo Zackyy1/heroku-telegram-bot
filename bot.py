@@ -225,8 +225,10 @@ bot.set_update_listener(listener)
 @bot.message_handler(commands=['start'])
 def command_start(message):
     cid = message.chat.id
+    localDB.database = upddb()
     result = firebase.get('/users/' + str(message.from_user.id), None)
-
+    print(localDB.database[str(message.from_user.id)])
+    print(localDB.database, upddb())
     if result is None:
         result = firebase.patch('/users/' + str(message.from_user.id) + "/",  {"name": message.from_user.first_name})
         bot.send_message(message.chat.id, text="Hello, dear friend! It's the first time you are using me, so let me help you.")
@@ -237,10 +239,7 @@ def command_start(message):
         localDB.database[str(message.from_user.id)] = {'language': chosenlang, 'step': 0, 'city':'Tallinn'}
         firebase.patch('/db', localDB.database)
         print("New user, adding to the database. User's DB: "+ str(localDB.database[str(message.from_user.id)]))
-        localDB.database = upddb()
-    else:
-        localDB.database = upddb()
-        print(localDB.database, upddb())
+    else: 
         #chosenlang = localDB.database[str(message.from_user.id)]['language'] # Getting language from Local DB
         chosenlang = localDB.database[str(message.from_user.id)]['language']
         getCity = firebase.get("/db/"+str(message.from_user.id)+"/city", None)
