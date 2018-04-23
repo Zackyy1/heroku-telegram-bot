@@ -82,7 +82,7 @@ restaurants = {
 clubs = {}
 
 inline = {
-        "Villa Wesset" : {'villa wesset', 'wesset'}
+        "Villa Wesset" : ['villa wesset', 'wesset']
 
 }
 
