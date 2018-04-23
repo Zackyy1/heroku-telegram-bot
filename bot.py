@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-print("Version 0.4")
+print("Version 0.5")
 
 import redis
 import os
@@ -27,7 +27,15 @@ server = Flask(__name__)
 global stage
 stage = 0
 pack = 0
+
+toprestaurants = {}
 restaurants = {}
+wine= {}
+pizza = {}
+euro = {}
+local = {}
+asian = {}
+
 firebase = firebase.FirebaseApplication(url, None)
 bot = telebot.TeleBot(token)
 
@@ -58,6 +66,11 @@ langStage.add(english, estonian, russian)
 
 ########################################################### FUNCTIONS ####################################################################################################
 
+def sortRestByType(type, mes):
+
+    tab = getCity(mes).restaurants
+    return tab
+
 def getCity(message):
     usr = localDB.database[str(message.from_user.id)]['city']
     chosen = parnu
@@ -69,12 +82,37 @@ def getCity(message):
         print("There was a mistake, choosing parnu by default")
     return chosen
 
-def sortRests(dict, mes):
-    restaurantsDict = dict.restaurants
-    global restaurants
+def sortTopRests(city):
+    restaurantsDict = city.restaurants
     for i in range(0, len(restaurantsDict)):
         keys = sorted(restaurantsDict.keys(), key=lambda x: (restaurantsDict[x]["priority"]))[i]
-        restaurants[keys] = restaurantsDict[keys]
+        toprestaurants[keys] = restaurantsDict[keys] ###
+
+def sortRests(m):
+    #global wine
+    #global pizza
+    #global asian
+    #global euro
+    #global local
+    #global restaurants
+    db = getCity(m).restaurants
+    dbkeys = list(db.keys())
+    dbvalues = list(db.values())
+    for i in range(0, len(db)):
+        if '/restaurant' in dbvalues[i]["type"]:
+            print(str(dbkeys[i]))
+            restaurants[str(dbkeys[i])] = dbvalues[i]
+            print("added "+str(dbkeys[i])+" to /restaurant")
+    for i in range(0, len(db)):
+        if '/pizza' in dbvalues[i]["type"]:
+            print(str(dbkeys[i]))
+            pizza[str(dbkeys[i])] = dbvalues[i]
+            print("added "+str(dbkeys[i])+" to /pizza")
+    for i in range(0, len(db)):
+        if '/wine' in dbvalues[i]["type"]:
+            print(str(dbkeys[i]))
+            wine[str(dbkeys[i])] = dbvalues[i]
+            print("added "+str(dbkeys[i])+" to /wine")
 
 def getLang(message):
     usr = localDB.database[str(message.from_user.id)]['language']
@@ -107,41 +145,32 @@ def newInline(*args):
 
 def sort(tab1, mes):
     kl = tab1
-    sortRests(getCity(mes), mes)
+
     chid = mes.chat.id
     shouldShowMore = True
     mess = chid
     rests = list(kl.values())
     restskey = list(kl.keys())
-    print(restskey[0])
+
     db = localDB.database[str(mes.from_user.id)]
     step = db['step']
     print("Users:"+str(mes.from_user.id)+". Step for sort: "+str(step))
-    global language
+
     for x in range(1, 3):
         if step < len(rests):
             pack = rests[step]
-            openedLang = pack[getLang(mes)["openedLocal"]]
-            addressLang = getLang(mes)["address"]
             inlineLink = types.InlineKeyboardMarkup()
-            inlbut = types.InlineKeyboardButton(text=pack["name"], url=pack["link"])
-            inlbut2 = types.InlineKeyboardButton(text=getLang(mes)["showmap"], url="https://www.google.ee/maps/place/" + pack["latitude"] + "," + pack["longitude"])
+
             menubut = types.InlineKeyboardButton(text=getLang(mes)['menu'], callback_data=str(restskey[step]))
-            #inlineLink.add(inlbut)
-            #inlineLink.add(inlbut2)
             inlineLink.add(menubut)
-            bot.send_photo(mess, pack["image"])
-            # bot.send_message(mes, "+37253088726")
-            # f bot.send_contact(mes, phone_number='+37253088726', first_name=pack['name'])
-            bot.send_message(mess, pack["name"] + ", " + openedLang + addressLang + pack["address"] + ". Tel: " + pack['phone'], reply_markup=inlineLink)
+            if pack['image'] is not "":
+                bot.send_photo(mess, pack["image"])
+
+            bot.send_message(mess, pack["name"] + ", " + pack["address"] + ". " + pack['phone'], reply_markup=inlineLink)
 
             step += 1
             print(str(db['step']) + "/" + str(len(rests)))
-            if len(rests) == step:
-                shouldShowMore = False
-                bot.send_message(mess, text=getLang(mes)["endoflist"])
-                setStage(0, mes)
-                db['step'] = step
+
         elif step >= len(rests) or step == len(rests):
             shouldShowMore = False
             bot.send_message(mess, text=getLang(mes)["endoflist"])
@@ -185,8 +214,22 @@ def applyStage(stageNum, ch):
                                                                        getLang(ch)['home']))
 
     elif stageNum == 33:
-        sort(restaurants, ch)
+        sort(toprestaurants, ch)
 
+        ######################################      command sorting ######## todo: add more sorting options ############
+    elif stageNum == 34:
+        sort(toprestaurants, ch)
+    elif stageNum == 35:
+        sort(wine, ch)
+    elif stageNum == 36:
+        sort(pizza, ch)
+    elif stageNum == 37:
+        sort(local, ch)
+    elif stageNum == 38:
+        sort(asian, ch)
+    elif stageNum == 39:
+        sort(euro, ch)
+        ################################################################################################################
     elif stageNum == 13:
         bot.send_message(chid, text="Let's choose your preferred language", reply_markup=langStage)
 
@@ -223,13 +266,13 @@ def setStage(num, chatid1):
     applyStage(stage, chatid1)
 
 
-
 ######################################################    SETUP    #################################################
 
 localDB.database = upddb()
 print("Updated database.")
 bot.set_update_listener(listener)
-
+sortTopRests(parnu)
+sortTopRests(tallinn)
 
 #########################################   HANDLERS   ####################################################################################################################################
 @bot.message_handler(commands=['start'])
@@ -268,6 +311,21 @@ def command_home(m):
     print("Going home from /home command")
     setStage(0, m)
 
+@bot.message_handler(commands=['restaurant', 'restaurants'])
+def list_restaurants(m):
+    sortRests(m)
+    localDB.database[str(m.from_user.id)]['step'] = 0
+    setStage(34, m)
+@bot.message_handler(commands=['wine'])
+def list_restaurants(m):
+    sortRests(m)
+    localDB.database[str(m.from_user.id)]['step'] = 0
+    setStage(35, m)
+@bot.message_handler(commands=['pizza'])
+def list_restaurants(m):
+    sortRests(m)
+    localDB.database[str(m.from_user.id)]['step'] = 0
+    setStage(36, m)
 
 @bot.message_handler(commands=['help'])
 def command_help(m):
@@ -286,7 +344,7 @@ def command_settings(m):
 @bot.callback_query_handler(func=lambda call: True)
 def doit(m):
     print(m)
-    findinTable = inlineQuery.all[m.data]
+    findinTable = getCity(m).restaurants[m.data]
     if m.inline_message_id is None:
         bot.edit_message_reply_markup(chat_id=m.message.chat.id, message_id=m.message.message_id, reply_markup=newInline(
                                         ("Website", findinTable['link']),
@@ -351,6 +409,7 @@ def handleSoup(message):
     cid = message.chat.id
     cidi = message
     if message.text == getLang(cidi)["restaurants"]:
+
         setStage(4, mes)
         localDB.database[str(message.from_user.id)]['step'] = 0
         bot.send_message(message.chat.id, text=getLang(cidi)['initstage4'])
@@ -364,8 +423,9 @@ def handleSoup(message):
     elif message.text == getLang(cidi)["offers"]:
         bot.send_message(message.chat.id, text=getLang(cidi)["maintenance"])
         setStage(0, mes)
+
     elif message.text == getLang(cidi)["showmore"]:
-        setStage(33, mes)
+        setStage(stage, mes)
 
     elif message.text == "English" and stage == 13:
         print("Changed language to English")
