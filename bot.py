@@ -25,7 +25,6 @@ url = os.environ['FIREBASE_URL']
 
 server = Flask(__name__)
 global stage
-global stage
 stage = 0
 pack = 0
 restaurants = {}
@@ -61,11 +60,13 @@ langStage.add(english, estonian, russian)
 
 def getCity(message):
     usr = localDB.database[str(message.from_user.id)]['city']
-    chosen = "nothing"
+    chosen = parnu
     if usr == 'parnu':
         chosen = parnu
     elif usr == 'tallinn':
         chosen = tallinn
+    else:
+        print("There was a mistake, choosing parnu by default")
     return chosen
 
 def sortRests(dict, mes):
@@ -272,7 +273,7 @@ def command_settings(m):
 
 print(list(parnu.inline.values()))
 arr = list(parnu.inline.values())
-print(arr, list(parnu.inline.keys()))
+
 
 
 @bot.inline_handler(func=lambda query: len(query.query) > 0)
@@ -280,10 +281,9 @@ def smth(inline_query):
     qid = inline_query.id
     query = inline_query.query
     key = types.InlineKeyboardMarkup()
-
     list1 = list(inlineQuery.all.keys())
     list2 = list(inlineQuery.all.values())
-    print(len(inlineQuery.all), list1[0])
+
     # try:
     for i in range(0, len(inlineQuery.all)):
         if query[0:len(query)].lower() == str(list1[i])[0:len(query)].lower():
