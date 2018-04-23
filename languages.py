@@ -9,6 +9,8 @@ languages = {
     "settingsMsg":"This is a settings menu. You can change the city or language",
     "initstage0" : "Choose, what you would like to visit today:",
     "showmore" : "Show 2 more",
+    "showprev" : "Show previous 2",
+    "shouldshowmore" : "Show 2 more?",
     "toprestsaround" : "Show top restaurants",
     "offers" : "Special offers",
     "maintenance": "We are working on this function :]",
@@ -29,22 +31,28 @@ languages = {
     "parnu":"Pärnu",
     "tallinn":"Tallinn",
     "menu":"Menu",
+    "showmenu":"Open menu",
+
     },
 "estonian":
     {
     "firstwelcome1":"Tere! See on sinu esimene kord siin! Ma näitan sulle, kuidas mind kasutada!",
     "firstwelcome2":"Ma näitan kohad, kus saad oma kõhu täis teha!",
     "firstwelcome3":"Kirjuta \'/help\', kui tahad vaadata mis käsud ma aru saan",
+    "welcome1": "Jälle süüa?",
+    "welcome2": "Kas aitan sind sellega?",
     "settingsMsg":"See on seadmete menüü. Saad vahetada oma linna või keelt",
     "initstage0" : "Vali, kuhu taha minna täna:",
     "showmore" : "Näita veel 2",
+    "showprev": "Näita eelmised 2",
+    "shouldshowmore" : "Järgmised 2?",
     "toprestsaround" : "Näita parimad restoranid",
     "offers" : "Pakkumised",
     "maintenance": "See praegu ei tööta :]",
     "returning": "Tagasi menüüsse...",
     "initstage4":"Süüa tahad, jah?",
     "restaurants":"Restoraanid",
-    "unknown":"Ma ei tea sellist sõnu. Kirjuta '/help', et vaadata, mis käsud ma aru saan",
+    "unknown":"Ma ei tea sellist käseduest ahawahah. Kirjuta '/help', et vaadata, mis käsud ma aru saan",
     "home":"Tagasi",
     "showmap":"Näita kardil",
     "opened":", avatud ",
@@ -58,6 +66,9 @@ languages = {
     "parnu":"Pärnu",
     "tallinn":"Tallinn",
     "menu":"Menüü",
+    "showmenu":"Ava menüü",
+
+
        },
 
 }
