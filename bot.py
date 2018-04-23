@@ -25,6 +25,7 @@ url = os.environ['FIREBASE_URL']
 
 server = Flask(__name__)
 global stage
+global stage
 stage = 0
 pack = 0
 restaurants = {}
@@ -60,11 +61,12 @@ langStage.add(english, estonian, russian)
 
 def getCity(message):
     usr = localDB.database[str(message.from_user.id)]['city']
+    chosen = "nothing"
     if usr == 'parnu':
-        return parnu
-    if usr == 'tallinn':
-        return tallinn
-
+        chosen = parnu
+    elif usr == 'tallinn':
+        chosen = tallinn
+    return chosen
 
 def sortRests(dict, mes):
     restaurantsDict = dict.restaurants
@@ -73,18 +75,15 @@ def sortRests(dict, mes):
         keys = sorted(restaurantsDict.keys(), key=lambda x: (restaurantsDict[x]["priority"]))[i]
         restaurants[keys] = restaurantsDict[keys]
 
-
 def getLang(message):
     usr = localDB.database[str(message.from_user.id)]['language']
     return languages.languages[usr]
-
 
 def listener(messages):
     for m in messages:
         if m.content_type == 'text':
             # print the sent message to the console
             print(str(m.chat.first_name) + " [" + str(m.chat.id) + "]: " + m.text)
-
 
 def newButton(*args):
     mrkup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, row_width=1)
@@ -95,6 +94,7 @@ def newButton(*args):
 
 def upddb():
     attempt = firebase.get('/db', None)
+    print("Should localDB.database look like this:? "+str(attempt))
     return attempt
 
 def sort(tab1, mes):
@@ -200,11 +200,9 @@ def sendPhoto(name):
                                                 'address'] + ". Tel: " + pack['phone']))
     return ans1
 
-
 def sendText(text):
     klw = types.InputTextMessageContent(text)
     return klw
-
 
 def setStage(num, chatid1):
     global stage
@@ -217,7 +215,6 @@ def setStage(num, chatid1):
 
 localDB.database = upddb()
 print("Updated database.")
-print(upddb())
 bot.set_update_listener(listener)
 
 
@@ -227,8 +224,8 @@ def command_start(message):
     cid = message.chat.id
     localDB.database = upddb()
     result = firebase.get('/users/' + str(message.from_user.id), None)
-    print(localDB.database[str(message.from_user.id)])
-    print(localDB.database, upddb())
+    print("User's LOCAL database: "+str(localDB.database[str(message.from_user.id)]))
+
     if result is None:
         result = firebase.patch('/users/' + str(message.from_user.id) + "/",  {"name": message.from_user.first_name})
         bot.send_message(message.chat.id, text="Hello, dear friend! It's the first time you are using me, so let me help you.")
@@ -239,7 +236,7 @@ def command_start(message):
         localDB.database[str(message.from_user.id)] = {'language': chosenlang, 'step': 0, 'city':'Tallinn'}
         firebase.patch('/db', localDB.database)
         print("New user, adding to the database. User's DB: "+ str(localDB.database[str(message.from_user.id)]))
-    else: 
+    else:
         #chosenlang = localDB.database[str(message.from_user.id)]['language'] # Getting language from Local DB
         chosenlang = localDB.database[str(message.from_user.id)]['language']
         getCity = firebase.get("/db/"+str(message.from_user.id)+"/city", None)
@@ -379,7 +376,6 @@ def handleSoup(message):
 
 
 ########################################################################################################################
-
 
 
 @server.route('/' + token, methods=['POST'])
