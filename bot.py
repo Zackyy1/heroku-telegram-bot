@@ -234,7 +234,6 @@ def command_start(message):
         bot.send_message(message.chat.id, text="Type \'/help\' for additional commands & info!")
         setStage(13, message)
         chosenlang = "english"
-        firebase.patch('/db', localDB.database)
         localDB.database[str(message.from_user.id)] = {'language': chosenlang, 'step': 0, 'city':'Tallinn'}
         firebase.patch('/db', localDB.database)
         print("New user, adding to the database. User's DB: "+ str(localDB.database[str(message.from_user.id)]))
