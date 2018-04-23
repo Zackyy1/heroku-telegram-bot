@@ -225,7 +225,7 @@ def command_start(message):
     cid = message.chat.id
     localDB.database = upddb()
     result = firebase.get('/users/' + str(message.from_user.id), None)
-    print("User's LOCAL database: "+str(localDB.database[str(message.from_user.id)]))
+
 
     if result is None:
         result = firebase.patch('/users/' + str(message.from_user.id) + "/",  {"name": message.from_user.first_name})
@@ -234,6 +234,7 @@ def command_start(message):
         bot.send_message(message.chat.id, text="Type \'/help\' for additional commands & info!")
         setStage(13, message)
         chosenlang = "english"
+        firebase.patch('/db', localDB.database)
         localDB.database[str(message.from_user.id)] = {'language': chosenlang, 'step': 0, 'city':'Tallinn'}
         firebase.patch('/db', localDB.database)
         print("New user, adding to the database. User's DB: "+ str(localDB.database[str(message.from_user.id)]))
