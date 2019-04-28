@@ -1,6 +1,6 @@
 Never finished Telegram bot for Parnu & Tallinn restaurants. Even though there is a production version online, it takes time for it to launch and may have outdated data.
 
-t.me/TestBotSeljanka_bot
+<a href="t.me/TestBotSeljanka_bot">Join Telegram bot here</a>
 
 Developed using Python.
 Contains following features:
